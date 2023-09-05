@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What if I invested?</title>
+    <style>
+        /* Your CSS styles go here */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 0;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        form label,
+        form input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        form button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        #result {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+        }
+
+        .loading::after {
+            content: "...Loading...";
+        }
+    </style>
+</head>
+<body>
+    <h1>What if I invested?</h1>
+    <form>
+        <label for="stockSymbol">Stock Symbol:</label>
+        <input type="text" id="stockSymbol" required list="stockSymbols">
+
+        <!-- The datalist to hold stock symbol suggestions -->
+        <datalist id="stockSymbols"></datalist>
+
+        <label for="investmentAmount">Investment Amount ($):</label>
+        <input type="number" id="investmentAmount" required>
+
+        <label for="investmentDate">Investment Date:</label>
+        <input type="date" id="investmentDate" required>
+
+        <button type="button" onclick="trackInvestment()">CALCULATE</button>
+    </form>
+
+    <div class="loading" id="loading"></div>
+    <div id="result"></div>
+
+    <script>
+        const popular_stock_tickers = [
+            "AAPL", "MSFT", "AMZN", "GOOGL", "TSLA", "FB", "NVDA", "JPM", "V", "MA",
+            "PYPL", "NFLX", "DIS", "ADBE", "CRM", "GS", "UBER", "SQ", "SHOP", "INTC",
+            "AMD", "BABA", "BAC", "HD", "KO", "CMG", "AMC", "GME", "PLTR", "SNAP",
+            "ZM", "ROKU", "NIO", "CRSR", "SQ", "TWTR", "NKLA", "MRNA", "LULU", "NVAX",
+            "ATVI", "PFE", "ZNGA", "PTON", "WMT", "GE", "CSCO", "GM", "INTU", "CRM",
+            "AMAT", "T", "XOM", "CAT", "CVX", "VZ", "ORCL", "UAL", "DAL",
+            "SBUX", "NKE", "BA", "ACB", "TLRY", "CRON", "CGC", "AMD", "CCL", "RCL",
+            "SAVE", "JNJ", "MRK", "BMY", "ABBV", "WFC", "XOM", "CVX", "DAL",
+            "C", "JPM", "BAC", "WFC", "USB", "GS", "MS", "CSCO", "IBM", "INTC", "TSM", "ASML"
+        ];
+
+        const companyNames = {
+            "AAPL": "Apple Inc.",
+            "MSFT": "Microsoft Corporation",
+            "AMZN": "Amazon.com Inc.",
+            "GOOGL": "Alphabet Inc. (Google)",
+            "TSLA": "Tesla Inc.",
+            "FB": "Meta Platforms Inc. (Facebook)",
+            "NVDA": "NVIDIA Corporation",
+            "JPM": "JPMorgan Chase & Co.",
+            "V": "Visa Inc.",
+            "MA": "Mastercard Incorporated",
+            "PYPL": "PayPal Holdings Inc.",
+            "NFLX": "Netflix Inc.",
+            "DIS": "The Walt Disney Company",
+            "ADBE": "Adobe Inc.",
+            "CRM": "Salesforce.com Inc.",
+            "GS": "The Goldman Sachs Group Inc.",
+            "UBER": "Uber Technologies Inc.",
+            "SQ": "Square Inc.",
+            "SHOP": "Shopify Inc.",
+            "INTC": "Intel Corporation",
+            "AMD": "Advanced Micro Devices Inc.",
+            "BABA": "Alibaba Group Holding Limited",
+            "BAC": "Bank of America Corporation",
+            "HD": "The Home Depot Inc.",
+            "KO": "The Coca-Cola Company",
+            "CMG": "Chipotle Mexican Grill Inc.",
+            "AMC": "AMC Entertainment Holdings Inc.",
+            "GME": "GameStop Corp.",
+            "PLTR": "Palantir Technologies Inc.",
+            "SNAP": "Snap Inc.",
+            "ZM": "Zoom Video Communications Inc.",
+            "ROKU": "Roku Inc.",
+            "NIO": "NIO Inc.",
+            "CRSR": "Corsair Gaming Inc.",
+            "TWTR": "Twitter Inc.",
+            "NKLA": "Nikola Corporation",
+            "MRNA": "Moderna Inc.",
+            "LULU": "Lululemon Athletica Inc.",
+            "NVAX": "Novavax Inc.",
+            "ATVI": "Activision Blizzard Inc.",
+            "PFE": "Pfizer Inc.",
+            "ZNGA": "Zynga Inc.",
+            "PTON": "Peloton Interactive Inc.",
+            "WMT": "Walmart Inc.",
+            "GE": "General Electric Company",
+            "CSCO": "Cisco Systems Inc.",
+            "GM": "General Motors Company",
+            "INTU": "Intuit Inc.",
+            "AAL": "American Airlines Group Inc.",
+            "UAL": "United Airlines Holdings Inc.",
+            "DAL": "Delta Air Lines Inc.",
+            "SBUX": "Starbucks Corporation",
+            "NKE": "Nike Inc.",
+            "BA": "The Boeing Company",
+            "ACB": "Aurora Cannabis Inc.",
+            "TLRY": "Tilray Inc.",
+            "CRON": "Cronos Group Inc.",
+            "CGC": "Canopy Growth Corporation",
+            "CCL": "Carnival Corporation & plc",
+            "RCL": "Royal Caribbean Group",
+            "SAVE": "Spirit Airlines Inc.",
+            "JNJ": "Johnson & Johnson",
+            "MRK": "Merck & Co. Inc.",
+            "BMY": "Bristol-Myers Squibb Company",
+            "ABBV": "AbbVie Inc.",
+            "IBM": "IBM Inc.",
+            "TSM": "Taiwan Semiconductor Corporation",
+            "ASML": "ASML Holding N.V."
+        };
+
+        function trackInvestment() {
+            const stockSymbol = document.getElementById('stockSymbol').value;
+            const investmentAmount = document.getElementById('investmentAmount').value;
+            const investmentDate = document.getElementById('investmentDate').value;
+
+            // Clear previous result and show loading
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+
+            // Call the API with the user inputs
+            callAPI(stockSymbol, investmentAmount, investmentDate);
+        }
+
+        function callAPI(symbol, amount, date) {
+            const apiKey = "5OI48rnfXPLgW4VbFggC2RiamryB6pE2ZdqE2Ty1";
+            
+            const apiUrl = 'https://aoeov3og5j.execute-api.us-west-1.amazonaws.com/dev';
+            const requestBody = {
+                "Stock Symbol": symbol,
+                "Amount Invested": amount,
+                "Date Invested": date
+            };
+
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": apiKey
+                },
+                body: JSON.stringify(requestBody)
+            };
+
+            console.log(requestOptions);
+            fetch(apiUrl, requestOptions)
+                .then(response => response.json())
+                .then(data => {
+                    const bodyObj = data.body;
+                    const data2 = JSON.parse(bodyObj);
+                    const currentValue = data2.current_value;
+                    updateResult(currentValue);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    updateResult('Error: Unable to fetch data from the API');
+                });
+        }
+
+        function updateResult(currentValue) {
+            // Hide loading and show the result
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<p><strong>Current Value:</strong> ${currentValue}</p>`;
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'none';
+        }
+
+        // Function to fetch stock symbol suggestions
+        function fetchStockSymbolSuggestions() {
+            const stockSymbolInput = document.getElementById('stockSymbol');
+            const stockSymbolsList = document.getElementById('stockSymbols');
+            const userInput = stockSymbolInput.value.toUpperCase();
+
+            stockSymbolsList.innerHTML = ''; // Clear previous suggestions
+
+            for (const symbol of popular_stock_tickers) {
+                if (symbol.startsWith(userInput)) {
+                    const option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = `${getCompanyName(symbol)}`;
+                    //option.textContent = `${symbol} - ${getCompanyName(symbol)}`;
+                    stockSymbolsList.appendChild(option);
+                }
+            }
+        }
+
+        function getCompanyName(symbol) {
+            return companyNames[symbol] || "Unknown";
+        }
+
+        document.getElementById('stockSymbol').addEventListener('input', fetchStockSymbolSuggestions);
+    </script>
+</body>
+</html>

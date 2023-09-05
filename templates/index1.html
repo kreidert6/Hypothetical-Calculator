@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What if I invested?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 0;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        form label,
+        form input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        form button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        #result {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+        }
+
+        .loading::after {
+            content: "...Loading...";
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Investment Tracker</h1>
+    <form>
+        <label for="stockSymbol">Stock Symbol:</label>
+        <input type="text" id="stockSymbol" required>
+
+        <label for="investmentAmount">Investment Amount ($):</label>
+        <input type="number" id="investmentAmount" required>
+
+        <label for="investmentDate">Investment Date:</label>
+        <input type="date" id="investmentDate" required>
+
+        <button type="button" onclick="trackInvestment()">CALCULATE</button>
+    </form>
+
+    <div class="loading" id="loading"></div>
+    <div id="result"></div>
+
+    <script>
+        function trackInvestment() {
+            const stockSymbol = document.getElementById('stockSymbol').value;
+            const investmentAmount = document.getElementById('investmentAmount').value;
+            const investmentDate = document.getElementById('investmentDate').value;
+
+            // Clear previous result and show loading
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+
+            // Call the API with the user inputs
+            callAPI(stockSymbol, investmentAmount, investmentDate);
+            
+        }
+
+        function callAPI(symbol, amount, date) {
+            const apiKey = "5OI48rnfXPLgW4VbFggC2RiamryB6pE2ZdqE2Ty1";
+            
+            const apiUrl = 'https://aoeov3og5j.execute-api.us-west-1.amazonaws.com/dev';
+            const requestBody = {
+                "Stock Symbol": symbol,
+                "Amount Invested": amount,
+                "Date Invested": date
+            };
+
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": apiKey
+                },
+                body: JSON.stringify(requestBody)
+            };
+
+            //alert(JSON.stringify(requestBody))
+            console.log(requestOptions);
+            fetch(apiUrl, requestOptions)
+        .then(response => response.json())
+        .then(data => {
+            const bodyObj = data.body;
+           
+            console.log(bodyObj)
+
+            // Access the 'current_value' from the parsed 'body' object
+            const data2 = JSON.parse(bodyObj);
+
+            const currentValue = data2.current_value;
+            console.log(currentValue)
+            // Update the result immediately
+            updateResult(currentValue);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            updateResult('Error: Unable to fetch data from the API');
+        });
+}
+        function updateResult(currentValue) {
+            // Hide loading and show the result
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<p><strong>Current Value:</strong> ${currentValue}</p>`;
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
